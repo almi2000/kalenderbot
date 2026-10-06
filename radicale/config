@@ -1,0 +1,19 @@
+[server]
+hosts = 0.0.0.0:5232
+max_content_length = 10000000
+
+[auth]
+type = htpasswd
+htpasswd_filename = /config/users
+htpasswd_encryption = autodetect
+delay = 1
+
+[rights]
+type = owner_only
+
+[storage]
+filesystem_folder = /data/collections
+
+[logging]
+level = info
+mask_passwords = True

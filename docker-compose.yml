@@ -1,0 +1,59 @@
+services:
+  app:
+    build: ./app
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      CALDAV_URL: http://radicale:5232/
+      DATA_DIR: /data
+    ports:
+      - "127.0.0.1:3000:3000"
+    volumes:
+      - app-data:/data
+    depends_on:
+      - radicale
+
+  radicale:
+    image: tomsquest/docker-radicale:latest
+    restart: unless-stopped
+    environment:
+      TZ: ${TZ:-Europe/Berlin}
+    ports:
+      - "127.0.0.1:5232:5232"
+    volumes:
+      - ./radicale/config:/config/config:ro
+      - ./radicale/users:/config/users:ro
+      - radicale-data:/data
+    read_only: true
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    cap_add:
+      - SETUID
+      - SETGID
+      - CHOWN
+      - KILL
+    healthcheck:
+      test: curl -f http://127.0.0.1:5232 || exit 1
+      interval: 60s
+      retries: 3
+
+  ntfy:
+    image: binwiederhier/ntfy:latest
+    profiles: ["ntfy"]
+    restart: unless-stopped
+    command: serve
+    environment:
+      TZ: ${TZ:-Europe/Berlin}
+      NTFY_BASE_URL: ${NTFY_PUBLIC_URL:-http://localhost:8080}
+      NTFY_BEHIND_PROXY: "true"
+    ports:
+      - "127.0.0.1:8080:80"
+    volumes:
+      - ntfy-cache:/var/cache/ntfy
+
+volumes:
+  app-data:
+  radicale-data:
+  ntfy-cache:
